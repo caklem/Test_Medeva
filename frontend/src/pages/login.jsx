@@ -36,13 +36,17 @@ function LoginPage() {
 
             console.log(response.data);
 
-            // simpan token
+            // simpan token & user
             localStorage.setItem(
                 "token",
                 response.data.token
             );
+            localStorage.setItem(
+                "user",
+                JSON.stringify(response.data.user)
+            );
 
-            alert("Login berhasil 🚀");
+            alert("Login berhasil");
 
             // redirect using React Router
             navigate("/dashboard");
@@ -63,25 +67,7 @@ function LoginPage() {
             <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
                 {/* Logo */}
                 <div className="mb-6">
-                    <div className="flex items-center gap-1">
-                        <span className="text-3xl font-light text-gray-600 tracking-tight">
-                            Medeva
-                        </span>
-                        <svg
-                            viewBox="0 0 40 24"
-                            className="w-10 h-6"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                d="M2 12h8l3-8 4 16 3-8h8"
-                                stroke="#F59E0B"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
-                        </svg>
-                    </div>
+                  <img src="/img/medeva.webp" alt="Medeva" style={{ height: "48px", objectFit: "contain" }} />
                 </div>
 
                 {/* Welcome Text */}
@@ -168,24 +154,7 @@ function LoginPage() {
                                 </Label>
                             </div>
                             <div className="flex flex-col items-center">
-                                <svg viewBox="0 0 64 64" className="w-10 h-10">
-                                    <path
-                                        d="M32 4C16.536 4 4 16.536 4 32s12.536 28 28 28 28-12.536 28-28S47.464 4 32 4z"
-                                        fill="#4285F4"
-                                    />
-                                    <path
-                                        d="M32 4v28l19.799 19.799C58.264 45.264 60 38.952 60 32c0-15.464-12.536-28-28-28z"
-                                        fill="#34A853"
-                                    />
-                                    <path
-                                        d="M32 32L12.201 51.799C18.736 58.264 28.048 60 32 60c15.464 0 28-12.536 28-28H32z"
-                                        fill="#FBBC05"
-                                    />
-                                    <path
-                                        d="M4 32c0 8.952 3.736 17.264 10.201 23.799L32 32H4z"
-                                        fill="#EA4335"
-                                    />
-                                </svg>
+                                <img src="/img/ReCAPTCHA_icon.svg.png" alt="reCAPTCHA" style={{ width: "40px", height: "40px" }} />
                                 <span className="text-[10px] text-gray-400 italic">reCAPTCHA</span>
                             </div>
                         </div>
@@ -210,7 +179,7 @@ function LoginPage() {
                     </Button>
 
                     {/* Link */}
-                    <div className="text-center">
+                    <div className="text-right">
                         <a
                             href="#"
                             className="inline-flex items-center text-sm text-gray-500 hover:text-blue-500 transition"

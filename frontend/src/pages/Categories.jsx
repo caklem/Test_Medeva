@@ -65,8 +65,12 @@ function Categories() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   // eslint-disable-next-line no-unused-vars
   const [isActive, setIsActive] = useState(false);
+
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = currentUser.is_admin === true;
 
   useEffect(() => {
     let ignore = false;
@@ -199,6 +203,17 @@ function Categories() {
     }
   };
 
+  const handleDeleteRoom = async () => {
+    if (!selectedRoom) return;
+    try {
+      await api.delete(`/kategori-ruangan/${selectedRoom.id}`);
+      setSelectedRoom(null);
+      setShowDeleteModal(false);
+    } catch {
+      alert("Gagal menghapus ruangan");
+    }
+  };
+
   const resetForm = () => {
     setFormData(initialForm);
     setFacilities(initialFacilities);
@@ -223,9 +238,11 @@ function Categories() {
             <div style={{ fontSize: "18px", fontWeight: 800, color: "#1a1a1a", lineHeight: 1.3, maxWidth: "200px" }}>
               TAMBAH KATEGORI<br />RUANGAN
             </div>
-            <button onClick={openAddForm} style={{ backgroundColor: "#3b82f6", color: "#fff", fontSize: "14px", fontWeight: 500, padding: "8px 24px", borderRadius: "6px", border: "none", cursor: "pointer" }}>
-              Tambah
-            </button>
+            {isAdmin && (
+              <button onClick={openAddForm} style={{ backgroundColor: "#3b82f6", color: "#fff", fontSize: "14px", fontWeight: 500, padding: "8px 24px", borderRadius: "6px", border: "none", cursor: "pointer" }}>
+                Tambah
+              </button>
+            )}
           </div>
 
           {/* STATUS FILTER */}
@@ -506,26 +523,93 @@ function Categories() {
             </div>
           ) : selectedRoom ? (
             <div className="flex-1 bg-white rounded-lg p-6 overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-gray-800">{selectedRoom.nama_ruangan}</h2>
-                <button
-                  onClick={() => openEditForm(selectedRoom)}
-                  style={{ padding: "6px 16px", backgroundColor: "#3b82f6", color: "#fff", fontSize: "13px", fontWeight: 500, borderRadius: "6px", border: "none", cursor: "pointer" }}
-                >
-                  Edit
-                </button>
+              {/* HEADER */}
+              <div className="flex items-center justify-between pb-4" style={{ borderBottom: "1px solid #e5e7eb" }}>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-bold text-gray-800">{selectedRoom.nama_ruangan}</h2>
+                  <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full ${
+                    selectedRoom.is_active ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {selectedRoom.is_active ? "Aktif" : "Non-Aktif"}
+                  </span>
+                </div>
+                {isAdmin && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditForm(selectedRoom)}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium cursor-pointer border-none transition-colors"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm font-medium cursor-pointer border-none transition-colors"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                      Hapus
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="space-y-4">
-                <div className="flex justify-between"><span className="text-gray-500">Harga</span><span>Rp {Number(selectedRoom.harga_ruangan || 0).toLocaleString("id-ID")}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Kelas</span><span>{kelasOptions.find((k) => String(k.value) === String(selectedRoom.id_kelas_ruangan))?.label || selectedRoom.kelas || "-"}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Jenis Kelamin</span><span>{selectedRoom.jenis_kelamin || "-"}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Usia</span><span>{selectedRoom.usia || "-"}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Penyakit</span><span>{selectedRoom.penyakit || "-"}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Status</span><span>{selectedRoom.is_active ? "Aktif" : "Non-Aktif"}</span></div>
+
+              {/* INFO GRID */}
+              <div className="mt-5 grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Harga</div>
+                  <div className="text-base font-bold text-gray-800">
+                    Rp {Number(selectedRoom.harga_ruangan || 0).toLocaleString("id-ID")}
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Kelas</div>
+                  <div className="text-base font-bold text-gray-800">
+                    {kelasOptions.find((k) => String(k.value) === String(selectedRoom.id_kelas_ruangan))?.label || selectedRoom.kelas || "-"}
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Jenis Kelamin</div>
+                  <div className="text-base font-bold text-gray-800">{selectedRoom.jenis_kelamin || "-"}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Usia</div>
+                  <div className="text-base font-bold text-gray-800">{selectedRoom.usia || "-"}</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4 col-span-2">
+                  <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide">Penyakit</div>
+                  <div className="text-base font-bold text-gray-800">{selectedRoom.penyakit || "-"}</div>
+                </div>
               </div>
-              <div className="mt-6">
-                <AktifkanButton onClick={() => setShowConfirmModal(true)} />
-              </div>
+
+              {/* FASILITAS */}
+              {selectedRoom.fasilitas_ruangan && (
+                <div className="mt-5">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Fasilitas</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(selectedRoom.fasilitas_ruangan).filter(([, v]) => v).map(([key]) => (
+                      <span key={key} className="bg-blue-50 text-blue-600 text-xs font-medium px-3 py-1.5 rounded-full">
+                        {key.replace(/_/g, " ")}
+                      </span>
+                    ))}
+                    {Object.values(selectedRoom.fasilitas_ruangan).filter(Boolean).length === 0 && (
+                      <span className="text-xs text-gray-400 italic">Tidak ada fasilitas</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ACTION */}
+              {isAdmin && (
+                <div className="mt-6 pt-4" style={{ borderTop: "1px solid #e5e7eb" }}>
+                {isAdmin && <AktifkanButton onClick={() => setShowConfirmModal(true)} />}
+                </div>
+              )}
             </div>
           ) : (
             <>
@@ -584,6 +668,29 @@ function Categories() {
               </button>
               <button onClick={handleToggleActive} className="px-6 py-2 rounded-md text-sm font-semibold cursor-pointer" style={{ border: "none", background: "#3b82f6", color: "#fff" }}>
                 Ya
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL KONFIRMASI HAPUS */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.3)" }} onClick={() => setShowDeleteModal(false)}>
+          <div className="bg-white rounded-xl p-6 w-[400px]" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5" style={{ borderBottom: "1px solid #e0e0e0", paddingBottom: "16px" }}>
+              <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#333" }}>KONFIRMASI HAPUS</h2>
+              <button onClick={() => setShowDeleteModal(false)} style={{ fontSize: "18px", color: "#555", background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}>✕</button>
+            </div>
+            <p style={{ fontSize: "14px", color: "#555", marginBottom: "24px", textAlign: "left" }}>
+              Apakah Anda yakin ingin menghapus kategori <strong style={{ fontWeight: 700, color: "#333" }}>{selectedRoom?.nama_ruangan}</strong> ?
+            </p>
+            <div className="flex justify-end gap-3 pt-4" style={{ borderTop: "1px solid #e0e0e0" }}>
+              <button onClick={() => setShowDeleteModal(false)} className="px-6 py-2 rounded-md text-sm font-medium cursor-pointer" style={{ border: "1px solid #888", background: "transparent", color: "#666" }}>
+                Batal
+              </button>
+              <button onClick={handleDeleteRoom} className="px-6 py-2 rounded-md text-sm font-semibold cursor-pointer" style={{ border: "none", background: "#ef4444", color: "#fff" }}>
+                Hapus
               </button>
             </div>
           </div>
