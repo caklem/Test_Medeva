@@ -60,12 +60,14 @@ function Categories() {
   const [facilities, setFacilities] = useState(initialFacilities);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   // eslint-disable-next-line no-unused-vars
   const [isActive, setIsActive] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [menuOpenId, setMenuOpenId] = useState(null);
 
   const { isAdmin } = useAuth();
 
@@ -108,6 +110,13 @@ function Categories() {
   const kelasOptions = kelasList.map((k) => ({ value: k.id, label: k.nama_kelas }));
 
   const totalPages = Math.ceil(total / perPage) || 1;
+
+  useEffect(() => {
+    if (!menuOpenId) return;
+    const handler = () => setMenuOpenId(null);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [menuOpenId]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -226,12 +235,16 @@ function Categories() {
 
   const handleDeleteRoom = async () => {
     if (!selectedRoom) return;
+    setDeleting(true);
     try {
       await api.delete(`/kategori-ruangan/${selectedRoom.id}`);
       setSelectedRoom(null);
       setShowDeleteModal(false);
+      setRefreshKey((k) => k + 1);
     } catch {
       alert("Gagal menghapus ruangan");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -247,7 +260,7 @@ function Categories() {
     <div className="bg-white rounded-lg p-6 overflow-y-auto">
       <div className="flex items-start justify-between" style={{ marginBottom: "4px" }}>
         <div className="flex items-center gap-2">
-          <button onClick={() => { setShowForm(false); setEditingRoom(null); }} className="lg:hidden mr-1 p-1 rounded hover:bg-gray-100 cursor-pointer border-none bg-transparent">
+          <button onClick={() => { setShowForm(false); setEditingRoom(null); }} className="md:hidden mr-1 p-1 rounded hover:bg-gray-100 cursor-pointer border-none bg-transparent">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
@@ -455,7 +468,7 @@ function Categories() {
     <div className="bg-white p-4 sm:p-6 overflow-y-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4" style={{ borderBottom: "1px solid #e5e7eb" }}>
         <div className="flex items-center gap-2 min-w-0">
-          <button onClick={() => setSelectedRoom(null)} className="lg:hidden shrink-0 p-1 rounded hover:bg-gray-100 cursor-pointer border-none bg-transparent">
+          <button onClick={() => setSelectedRoom(null)} className="md:hidden shrink-0 p-1 rounded hover:bg-gray-100 cursor-pointer border-none bg-transparent">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
@@ -562,9 +575,9 @@ function Categories() {
       </div>
 
       {/* MAIN CONTENT */}
-      <div className="flex flex-col lg:flex-row">
+      <div className="flex flex-col md:flex-row">
         {/* LEFT PANEL */}
-        <div className="w-full lg:w-[340px] lg:min-w-[340px]" style={{ backgroundColor: "#ffffff", borderRadius: "8px", margin: "8px 0 8px 8px", padding: "24px" }}>
+        <div className="w-full md:w-[340px] md:min-w-[340px]" style={{ backgroundColor: "#ffffff", borderRadius: "8px", margin: "8px 0 8px 8px", padding: "24px" }}>
           {/* HEADER */}
           <div className="flex items-center justify-between">
             <div style={{ fontSize: "18px", fontWeight: 800, color: "#1a1a1a", lineHeight: 1.3, maxWidth: "200px" }}>
@@ -630,7 +643,7 @@ function Categories() {
                 )?.label || "-";
 
                 return (
-                  <div key={room.id} className="flex items-center" style={{ padding: "16px 0", borderBottom: "1px solid #f0f0f0" }}>
+                  <div key={room.id} className="flex items-start md:items-center py-6 md:py-4" style={{ borderBottom: "1px solid #f0f0f0" }}>
                     <div style={{ width: "40px", fontSize: "13px", color: "#888", alignSelf: "flex-start", paddingTop: "4px" }}>
                       {index + 1 + (page - 1) * perPage}
                     </div>
@@ -641,7 +654,7 @@ function Categories() {
                           {room.is_active ? "Aktif" : "Non-Aktif"}
                         </span>
                       </div>
-                      <div style={{ fontSize: "13px", color: "#8b7355", lineHeight: 1.7 }}>
+                      <div style={{ fontSize: "13px", color: "#444", lineHeight: 1.7 }}>
                         <div>Harga: Rp {formatCurrency(room.harga_ruangan) || "0"}</div>
                         <div>Kelas: {kelasLabel}</div>
                         <div>Jenis Kelamin: {room.jenis_kelamin || "-"}</div>
@@ -650,8 +663,10 @@ function Categories() {
                       </div>
                     </div>
                     <div style={{ width: "40px" }}>
+                      {/* DESKTOP: arrow button */}
                       <button
                         onClick={() => openDetail(room)}
+                        className="hidden md:flex"
                         style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#3b82f6", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -659,6 +674,70 @@ function Categories() {
                           <polyline points="12 5 19 12 12 19" />
                         </svg>
                       </button>
+                      {/* MOBILE: overflow menu */}
+                      {isAdmin && (
+                        <div className="md:hidden relative">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === room.id ? null : room.id); }}
+                            style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#3b82f6", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="5" r="1.5" fill="white" />
+                              <circle cx="12" cy="12" r="1.5" fill="white" />
+                              <circle cx="12" cy="19" r="1.5" fill="white" />
+                            </svg>
+                          </button>
+                          {menuOpenId === room.id && (
+                            <div
+                              className="absolute right-0 top-full mt-1 z-50 bg-white border border-gray-200 rounded-lg"
+                              style={{ width: "180px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                onClick={() => { openDetail(room); setMenuOpenId(null); }}
+                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer border-none bg-transparent"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                Lihat Detail
+                              </button>
+                              <button
+                                onClick={() => { openEditForm(room); setMenuOpenId(null); }}
+                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer border-none bg-transparent"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => { setSelectedRoom(room); setShowDeleteModal(true); setMenuOpenId(null); }}
+                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 cursor-pointer border-none bg-transparent"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                                Hapus
+                              </button>
+                              <button
+                                onClick={() => { setEditingRoom(room); setShowConfirmModal(true); setMenuOpenId(null); }}
+                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer border-none bg-transparent"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="21 8 21 21 3 21 3 8" />
+                                  <rect x="1" y="3" width="22" height="5" />
+                                  <line x1="10" y1="12" x2="14" y2="12" />
+                                </svg>
+                                {room.is_active ? "Nonaktifkan" : "Aktifkan"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -690,28 +769,28 @@ function Categories() {
         </div>
 
         {/* RIGHT PANEL — DESKTOP ONLY */}
-        <div className="hidden lg:flex lg:flex-col flex-1 min-w-0" style={{ margin: "8px 8px 8px 8px" }}>
+        <div className="hidden md:flex md:flex-col flex-1 min-w-0" style={{ margin: "8px 8px 8px 8px" }}>
           {showForm ? renderForm() : selectedRoom ? renderDetail() : renderPlaceholder()}
         </div>
       </div>
 
       {/* MOBILE PLACEHOLDER — shown inline when no form/detail */}
       {!showForm && !selectedRoom && (
-        <div className="lg:hidden" style={{ margin: "0 8px 8px 8px" }}>
+        <div className="md:hidden" style={{ margin: "0 8px 8px 8px" }}>
           {renderPlaceholder()}
         </div>
       )}
 
       {/* MOBILE FORM MODAL */}
       {showForm && (
-        <div className="fixed inset-0 z-50 lg:hidden bg-white overflow-y-auto" style={{ top: "56px" }}>
+        <div className="fixed inset-0 z-50 md:hidden bg-white overflow-y-auto" style={{ top: "56px", paddingBottom: "32px" }}>
           {renderForm()}
         </div>
       )}
 
       {/* MOBILE DETAIL MODAL */}
       {selectedRoom && (
-        <div className="fixed inset-0 z-50 lg:hidden bg-white overflow-y-auto" style={{ top: "56px" }}>
+        <div className="fixed inset-0 z-50 md:hidden bg-white overflow-y-auto" style={{ top: "56px", paddingBottom: "32px" }}>
           {renderDetail()}
         </div>
       )}
@@ -722,21 +801,21 @@ function Categories() {
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       <Header onToggleSidebar={() => setSidebarOpen((o) => !o)} />
 
-      <div className="flex flex-1 overflow-hidden lg:pl-[70px]" style={{ paddingTop: "56px" }}>
+      <div className="flex flex-1 overflow-hidden md:pl-[70px]" style={{ paddingTop: "56px" }}>
         <Sidebar sidebarOpen={sidebarOpen} onCloseSidebar={() => setSidebarOpen(false)} />
         <main className="flex-1 overflow-y-auto" style={{ backgroundColor: "#e8e8e8" }}>
           {content}
         </main>
       </div>
 
-      <footer className="bg-white border-t border-gray-200 py-4 text-center text-sm text-gray-500 lg:pl-[70px]">
+      <footer className="bg-white border-t border-gray-200 py-4 text-center text-sm text-gray-500 md:pl-[70px]">
         2026 (c) PT Medeva Multi Talenta
       </footer>
 
       {/* MODAL KONFIRMASI STATUS */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.3)" }} onClick={() => setShowConfirmModal(false)}>
-          <div className="bg-white rounded-xl p-6 w-[400px]" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.3)" }} onClick={() => setShowConfirmModal(false)}>
+          <div className="bg-white rounded-xl p-6 w-full max-w-[400px]" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5" style={{ borderBottom: "1px solid #e0e0e0", paddingBottom: "16px" }}>
               <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#333" }}>KONFIRMASI STATUS</h2>
               <button onClick={() => setShowConfirmModal(false)} style={{ fontSize: "18px", color: "#555", background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}>✕</button>
@@ -758,8 +837,8 @@ function Categories() {
 
       {/* MODAL KONFIRMASI HAPUS */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.3)" }} onClick={() => setShowDeleteModal(false)}>
-          <div className="bg-white rounded-xl p-6 w-[400px]" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.3)" }} onClick={() => setShowDeleteModal(false)}>
+          <div className="bg-white rounded-xl p-6 w-full max-w-[400px]" style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5" style={{ borderBottom: "1px solid #e0e0e0", paddingBottom: "16px" }}>
               <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#333" }}>KONFIRMASI HAPUS</h2>
               <button onClick={() => setShowDeleteModal(false)} style={{ fontSize: "18px", color: "#555", background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}>✕</button>
@@ -771,8 +850,8 @@ function Categories() {
               <button onClick={() => setShowDeleteModal(false)} className="px-6 py-2 rounded-md text-sm font-medium cursor-pointer" style={{ border: "1px solid #888", background: "transparent", color: "#666" }}>
                 Batal
               </button>
-              <button onClick={handleDeleteRoom} className="px-6 py-2 rounded-md text-sm font-semibold cursor-pointer" style={{ border: "none", background: "#ef4444", color: "#fff" }}>
-                Hapus
+              <button onClick={handleDeleteRoom} disabled={deleting} className="px-6 py-2 rounded-md text-sm font-semibold cursor-pointer" style={{ border: "none", background: deleting ? "#999" : "#ef4444", color: "#fff" }}>
+                {deleting ? "Menghapus..." : "Hapus"}
               </button>
             </div>
           </div>

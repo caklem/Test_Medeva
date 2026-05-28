@@ -99,19 +99,19 @@ function Sidebar({ sidebarOpen, onCloseSidebar }) {
       {/* MOBILE OVERLAY */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 lg:hidden"
+          className="fixed inset-0 z-40 md:hidden"
           onClick={() => { onCloseSidebar(); setShowSubmenu(false); }}
         />
       )}
 
       {/* SIDEBAR — DESKTOP */}
-      <aside className="fixed left-0 z-50 top-[56px] h-screen w-[70px] bg-white border-r flex flex-col items-center pt-4 hidden lg:flex" style={{ borderColor: "#e0e0e0" }}>
+      <aside className="fixed left-0 z-50 top-[56px] h-screen w-[70px] bg-white border-r flex flex-col items-center pt-4 hidden md:flex" style={{ borderColor: "#e0e0e0" }}>
         {sidebarContent}
       </aside>
 
       {/* SIDEBAR — MOBILE DRAWER */}
       {sidebarOpen && (
-        <aside className="fixed left-0 z-50 top-[56px] h-screen w-[220px] bg-white border-r flex flex-col items-center pt-4 lg:hidden" style={{ borderColor: "#e0e0e0", boxShadow: "4px 0 12px rgba(0,0,0,0.1)" }}>
+        <aside className="fixed left-0 z-50 top-[56px] h-screen w-[220px] bg-white border-r flex flex-col items-center pt-4 md:hidden" style={{ borderColor: "#e0e0e0", boxShadow: "4px 0 12px rgba(0,0,0,0.1)" }}>
           {sidebarContent}
         </aside>
       )}

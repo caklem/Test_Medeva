@@ -12,6 +12,7 @@ const loginSchema = yup.object().shape({
   klinikId: yup.string().required("Klinik ID wajib diisi"),
   username: yup.string().required("User ID wajib diisi"),
   password: yup.string().required("Password wajib diisi"),
+  robot: yup.boolean().oneOf([true], "Harap centang 'Saya bukan robot'"),
 });
 
 function LoginPage() {
@@ -44,18 +45,13 @@ function LoginPage() {
         setErrors({});
 
         try {
-            await loginSchema.validate(formData, { abortEarly: false });
+            await loginSchema.validate({ ...formData, robot: isRobotChecked }, { abortEarly: false });
         } catch (err) {
             const fieldErrors = {};
             err.inner.forEach((validationErr) => {
                 fieldErrors[validationErr.path] = validationErr.message;
             });
             setErrors(fieldErrors);
-            return;
-        }
-
-        if (!isRobotChecked) {
-            setErrors((prev) => ({ ...prev, robot: "Harap centang 'Saya bukan robot'" }));
             return;
         }
 

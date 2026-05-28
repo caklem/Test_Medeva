@@ -43,14 +43,14 @@ function Header({ onToggleSidebar }) {
       }}
     >
       {/* LEFT */}
-      <button onClick={onToggleSidebar} className="lg:hidden flex items-center justify-center p-1 cursor-pointer border-none bg-transparent">
+      <button onClick={onToggleSidebar} className="md:hidden flex items-center justify-center p-1 cursor-pointer border-none bg-transparent">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="3" y1="6" x2="21" y2="6" />
           <line x1="3" y1="12" x2="21" y2="12" />
           <line x1="3" y1="18" x2="21" y2="18" />
         </svg>
       </button>
-      <div className="hidden lg:block" style={{ fontSize: "15px", fontWeight: 700, color: "#1a1a1a" }}>
+      <div className="hidden md:block" style={{ fontSize: "15px", fontWeight: 700, color: "#1a1a1a" }}>
         Klinik Sjamsudin Noor
       </div>
 
@@ -106,7 +106,7 @@ function Header({ onToggleSidebar }) {
             className="flex items-center cursor-pointer bg-transparent border-none"
             style={{ gap: "10px" }}
           >
-            <div className="hidden lg:block" style={{ textAlign: "right" }}>
+            <div className="hidden md:block" style={{ textAlign: "right" }}>
               <div style={{ fontSize: "13px", fontWeight: 600, color: "#333333" }}>{displayName}</div>
               <div style={{ fontSize: "11px", fontWeight: 400, color: "#888888" }}>{displayRole}</div>
             </div>

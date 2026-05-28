@@ -2,7 +2,6 @@
 
 Aplikasi **Room Category Management** untuk rumah sakit/klinik dengan fitur **Role-Based Access Control**, built with **React 19 + Vite** (frontend) dan **Express 5** (backend).
 
-**Repository**: https://github.com/caklem/Test_Medeva  
 **Status**: Production Ready (In-Memory Mock Data)
 
 ---
@@ -54,17 +53,24 @@ Test-Medeva/
 │   │
 │   ├── controllers/
 │   │   ├── authControllers.js      # Login logic
-│   │   └── categoryControllers.js  # CRUD kategori ruangan
+│   │   ├── categoryControllers.js  # CRUD kategori ruangan
+│   │   └── kelasControllers.js     # GET kelas ruangan
+│   │
+│   ├── services/
+│   │   ├── authService.js          # Auth queries (in-memory + bcrypt)
+│   │   ├── categoryService.js      # CRUD operations (in-memory)
+│   │   └── kelasService.js         # Kelas queries (in-memory)
 │   │
 │   ├── routes/
 │   │   ├── authRoutes.js           # POST /api/auth/login
-│   │   └── categoryRoutes.js       # CRUD endpoints
+│   │   ├── categoryRoutes.js       # CRUD endpoints
+│   │   └── kelasRoutes.js          # GET /api/kelas-ruangan
 │   │
 │   ├── middleware/
 │   │   ├── authMiddleware.js       # JWT verification
 │   │   └── roleMiddleware.js       # RBAC enforcement (isAdmin)
 │   │
-│   └── data/                       # In-memory mock data
+│   └── data/                       # In-memory seed data
 │       ├── klinik.js               # Master clinic data
 │       ├── users.js                # User accounts (admin, user)
 │       ├── kelas_ruangan.js        # Room classes
@@ -87,9 +93,7 @@ Test-Medeva/
         │   └── api.js              # Axios instance dengan interceptors
         │
         ├── styles/
-        │   ├── index.css
-        │   ├── App.css
-        │   └── Categories.css      # Custom CSS (600+ lines)
+        │   └── index.css             # Tailwind directives
         │
         └── components/ui/
             ├── button.jsx
@@ -145,6 +149,7 @@ VITE v8.0.14 ready in 293 ms
 
 1. Buka **http://localhost:5174** di browser
 2. Login dengan:
+   - **Klinik ID**: `AUTH001`
    - **Admin**: `admin` / `123456`
    - **User**: `user` / `123456`
 3. Masuk ke dashboard dan lihat list kategori ruangan
@@ -159,6 +164,7 @@ VITE v8.0.14 ready in 293 ms
 
 1. **Halaman Login** muncul otomatis saat membuka aplikasi
 2. **Masukkan Credentials**:
+   - Klinik ID: `AUTH001`
    - Username: `admin` (atau `user`)
    - Password: `123456`
 3. **Klik Login** untuk masuk ke dashboard
@@ -222,8 +228,9 @@ VITE v8.0.14 ready in 293 ms
 - Bisa view list kategori
 - Bisa lihat detail kategori
 - Bisa tambah kategori baru
-- Bisa edit kategori (fitur dalam development)
-- Bisa hapus kategori (fitur dalam development)
+- Bisa edit kategori
+- Bisa hapus kategori
+- Bisa nonaktifkan/aktifkan kategori
 
 **User** (`user` / `123456`):
 - Bisa view list kategori
@@ -323,7 +330,7 @@ Login dan dapatkan JWT token.
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"123456"}'
+  -d '{"klinikId":"AUTH001","username":"admin","password":"123456"}'
 ```
 
 **Response (200 OK):**
@@ -511,12 +518,35 @@ curl -X DELETE http://localhost:3000/api/kategori-ruangan/1 \
 
 ---
 
+#### GET `/kelas-ruangan`
+Dapatkan daftar kelas ruangan yang aktif.
+
+**Request:**
+```bash
+curl -X GET http://localhost:3000/api/kelas-ruangan \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    { "id": 1, "nama_kelas": "Clover", "is_active": true },
+    { "id": 2, "nama_kelas": "Jingga", "is_active": true },
+    { "id": 3, "nama_kelas": "Ocean Blue", "is_active": true }
+  ]
+}
+```
+
+---
+
 ## Test Credentials
 
-| Role | Username | Password | Akses |
-|------|----------|----------|-------|
-| **Admin** | `admin` | `123456` | Create, Read, Update, Delete |
-| **User** | `user` | `123456` | Read Only |
+| Role | Klinik ID | Username | Password | Akses |
+|------|-----------|----------|----------|-------|
+| **Admin** | `AUTH001` | `admin` | `123456` | Create, Read, Update, Delete |
+| **User** | `AUTH001` | `user` | `123456` | Read Only |
 
 ### Permission Matrix
 
@@ -538,7 +568,7 @@ curl -X DELETE http://localhost:3000/api/kategori-ruangan/1 \
   id: 1,
   nama: "Klinik Sjamsudin Noor",
   alamat: "Banjarmasin",
-  kode_auth: "MEDEVA-AUTH-2026",
+  kode_auth: "AUTH001",
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z"
 }
@@ -552,7 +582,7 @@ curl -X DELETE http://localhost:3000/api/kategori-ruangan/1 \
   nama_lengkap: "Admin Medeva",
   email: "admin@medeva.com",
   username: "admin",
-  password: "123456",  // plaintext untuk development
+  password: "123456",  // di-hash dengan bcryptjs
   is_admin: true,
   created_at: "2026-01-01T00:00:00.000Z",
   updated_at: "2026-01-01T00:00:00.000Z"
@@ -613,6 +643,7 @@ curl -X DELETE http://localhost:3000/api/kategori-ruangan/1 \
 - **Express** 5.0.0 - Web framework
 - **Node.js** 18+ - Runtime
 - **jsonwebtoken** 9.0.3 - JWT generation
+- **bcryptjs** 3.0.3 - Password hashing
 - **dotenv** - Environment variables
 - **cors** - Cross-origin requests
 - **nodemon** - Auto-reload development
@@ -658,8 +689,7 @@ curl -X DELETE http://localhost:3000/api/kategori-ruangan/1 \
 - Menu structure ready for expansion
 
 ### Styling
-- **Custom CSS** (Categories.css) dengan semantic naming
-- **Tailwind** untuk layout responsiveness
+- **Tailwind CSS** untuk layout dan styling utama
 - **Color Scheme**:
   - Primary: Teal (#4DC9C1)
   - Accent: Gold (#FFD700)
@@ -675,6 +705,7 @@ curl -X DELETE http://localhost:3000/api/kategori-ruangan/1 \
 PORT=3000
 JWT_SECRET=medeva_secret_key
 NODE_ENV=development
+# Database tidak diperlukan — menggunakan in-memory data
 ```
 
 ### Frontend (vite.config.js)
@@ -720,7 +751,7 @@ npm run dev
 ## Production Checklist
 
 - [ ] Replace in-memory arrays with real database (PostgreSQL/MongoDB)
-- [ ] Implement password hashing (bcryptjs)
+- [x] Implement password hashing (bcryptjs)
 - [ ] Add environment-based API endpoint configuration
 - [ ] Setup HTTPS and CORS whitelist
 - [ ] Add comprehensive request/response logging
@@ -773,8 +804,7 @@ localStorage.getItem('token')
 | [backend/app.js](backend/app.js) | Server setup & routing | ~35 |
 | [backend/controllers/categoryControllers.js](backend/controllers/categoryControllers.js) | CRUD logic | ~150 |
 | [frontend/src/App.jsx](frontend/src/App.jsx) | React routing | ~30 |
-| [frontend/src/pages/Categories.jsx](frontend/src/pages/Categories.jsx) | Main dashboard | ~1000+ |
-| [frontend/src/styles/Categories.css](frontend/src/styles/Categories.css) | Custom styling | ~600+ |
+| [frontend/src/pages/Categories.jsx](frontend/src/pages/Categories.jsx) | Main dashboard | ~860 |
 
 ---
 
@@ -814,7 +844,4 @@ git push
 
 ---
 
-**Last Updated**: May 28, 2026  
-**Repository**: https://github.com/caklem/Test_Medeva  
-**Author**: Medeva Development Team  
-**License**: All rights reserved
+**Last Updated**: May 28, 2026
