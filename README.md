@@ -153,6 +153,160 @@ VITE v8.0.14 ready in 293 ms
 
 ---
 
+## How to Use
+
+### Login
+
+1. **Halaman Login** muncul otomatis saat membuka aplikasi
+2. **Masukkan Credentials**:
+   - Username: `admin` (atau `user`)
+   - Password: `123456`
+3. **Klik Login** untuk masuk ke dashboard
+4. Token disimpan otomatis di localStorage
+
+### Dashboard - View Kategori Ruangan
+
+**Left Panel (List)**:
+- Menampilkan semua kategori ruangan dalam grid table
+- Setiap row menunjukkan: No, Nama Ruangan, Kelas, Status
+
+**Fitur di Left Panel**:
+- **Status Filter**: Pilih "Semua", "Aktif", atau "Non-Aktif" untuk filter
+- **Search**: Ketik nama ruangan untuk cari
+- **Pagination**: Tampilkan 5 item per halaman, navigasi dengan tombol halaman
+
+**Cara Menggunakan**:
+1. Lihat daftar kategori ruangan di left panel
+2. Klik pada salah satu row untuk lihat detail di right panel
+3. Detail menampilkan: Nama, Harga, Fasilitas, Status, dll
+
+### Dashboard - Tambah Kategori (Admin Only)
+
+**Akses Form**:
+- Klik tombol **"Tambah"** di header
+- Form muncul di right panel (bukan modal)
+
+**Form Fields**:
+| Field | Tipe | Wajib | Keterangan |
+|-------|------|-------|-----------|
+| Nama Ruangan | Text | Ya | Nomor/nama ruangan |
+| Kelas Ruangan | Dropdown | Ya | Pilih dari: Jingga, Ocean Blue, Clover |
+| Harga Ruangan | Number | Tidak | Harga per hari |
+| Jenis Kelamin | Radio | Tidak | Semua, Laki-laki, Perempuan |
+| Usia | Radio | Tidak | Semua, Anak, Dewasa |
+| Penyakit | Radio | Tidak | Infeksius, Non-Infeksius |
+| Fasilitas | Checkbox | Tidak | Pilih 0 atau lebih dari: AC, TV, WiFi, Kamar Mandi, Kulkas, Kasur Single, Kasur Double, Toiletries |
+
+**Cara Mengisi**:
+1. Isi field "Nama Ruangan" (wajib)
+2. Pilih "Kelas Ruangan" (wajib)
+3. Isi field lainnya sesuai kebutuhan
+4. Centang fasilitas yang tersedia
+5. Klik **"Simpan"** untuk menyimpan
+6. Klik **"Batal"** untuk membatalkan dan tutup form
+
+**Hasil**:
+- Kategori baru ditambahkan ke list
+- List otomatis refresh menampilkan data terbaru
+- Form tertutup dan kembali ke empty state
+
+### Dashboard - Logout
+
+- Klik **"Logout"** di bagian atas kanan (user profile area)
+- Kembali ke halaman login
+- Token dihapus dari localStorage
+
+### User Role Differences
+
+**Admin** (`admin` / `123456`):
+- Bisa view list kategori
+- Bisa lihat detail kategori
+- Bisa tambah kategori baru
+- Bisa edit kategori (fitur dalam development)
+- Bisa hapus kategori (fitur dalam development)
+
+**User** (`user` / `123456`):
+- Bisa view list kategori
+- Bisa lihat detail kategori
+- **Tidak bisa** tambah kategori
+- **Tidak bisa** edit kategori
+- **Tidak bisa** hapus kategori
+
+---
+
+## Testing Scenarios
+
+### Scenario 1: Admin Login & Browse Categories
+
+**Steps**:
+1. Buka http://localhost:5174
+2. Username: `admin`, Password: `123456`
+3. Klik Login
+4. Lihat list kategori di left panel
+5. Klik satu kategori untuk lihat detail
+
+**Expected Result**:
+- Login berhasil, redirect ke dashboard
+- List kategori menampilkan 3 items
+- Detail panel menampilkan informasi kategori
+
+### Scenario 2: Search & Filter
+
+**Steps**:
+1. Di left panel, ketik "Ruangan" di search box
+2. Tekan Enter atau tunggu otomatis filter
+3. Ubah status filter ke "Aktif"
+4. Ubah ke halaman 2 (jika ada)
+
+**Expected Result**:
+- List tergFilter sesuai search
+- Status filter bekerja dengan baik
+- Pagination berfungsi
+
+### Scenario 3: Admin Add Kategori
+
+**Steps**:
+1. Login sebagai admin
+2. Klik tombol "Tambah"
+3. Isi form:
+   - Nama Ruangan: "Test Room 001"
+   - Kelas: "Jingga"
+   - Harga: 500000
+   - Fasilitas: AC, TV, WiFi
+4. Klik "Simpan"
+
+**Expected Result**:
+- Form ter-submit
+- Kategori baru muncul di list dengan nomor urut otomatis
+- Form tertutup
+
+### Scenario 4: User Cannot Add
+
+**Steps**:
+1. Login sebagai user (`user` / `123456`)
+2. Lihat button "Tambah" di header
+3. Button "Tambah" tidak ada atau disabled
+
+**Expected Result**:
+- User tidak melihat button "Tambah"
+- Tidak bisa akses form penambahan
+
+### Scenario 5: Pagination
+
+**Steps**:
+1. Login sebagai admin
+2. Di left panel, perhatikan pagination di bawah list
+3. Jika ada lebih dari 5 items, ada tombol next page
+4. Klik next page
+5. Klik previous page
+
+**Expected Result**:
+- Navigasi halaman berfungsi
+- Item berubah sesuai halaman yang dipilih
+- Nomor halaman update
+
+---
+
 ## API Documentation
 
 ### Base URL
