@@ -1,159 +1,121 @@
-const kategoriRuangan = require("../data/categories");
-const kelasRuangan = require("../data/kelas_ruangan");
+const categoryService = require("../services/categoryService");
 
-const getCategories = (req, res) => {
-  let { page = 1, perPage = 5, search = "", status = "semua" } = req.query;
-
-  page = parseInt(page);
-  perPage = parseInt(perPage);
-
-  let filteredCategories = kategoriRuangan.filter((category) => {
-    const nameMatch = category.nama_ruangan
-      .toLowerCase()
-      .includes(search.toLowerCase());
-
-    const statusMatch =
-      status === "semua" ||
-      (status === "aktif" && category.is_active) ||
-      (status === "non-aktif" && !category.is_active);
-
-    return nameMatch && statusMatch;
-  });
-
-  const totalData = filteredCategories.length;
-  const startIndex = (page - 1) * perPage;
-  const endIndex = startIndex + perPage;
-  const paginatedData = filteredCategories.slice(startIndex, endIndex);
-
-  res.json({
-    success: true,
-    page,
-    perPage,
-    totalData,
-    totalPage: Math.ceil(totalData / perPage),
-    data: paginatedData,
-  });
+const getCategories = async (req, res) => {
+  try {
+    const { page, perPage, search, status } = req.query;
+    const result = await categoryService.getAll({ page, perPage, search, status });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error("getCategories error:", err);
+    res.status(500).json({ success: false, message: "Terjadi kesalahan server" });
+  }
 };
 
-const getCategoryById = (req, res) => {
-  const { id } = req.params;
+const getCategoryById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const category = await categoryService.getById(id);
 
-  const category = kategoriRuangan.find((c) => c.id == id);
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Kategori ruangan tidak ditemukan",
+      });
+    }
 
-  if (!category) {
-    return res.status(404).json({
-      success: false,
-      message: "Kategori ruangan tidak ditemukan",
-    });
+    res.json({ success: true, data: category });
+  } catch (err) {
+    console.error("getCategoryById error:", err);
+    res.status(500).json({ success: false, message: "Terjadi kesalahan server" });
   }
-
-  res.json({
-    success: true,
-    data: category,
-  });
 };
 
-const addCategory = (req, res) => {
-  const {
-    id_kelas_ruangan,
-    jenis_kelamin,
-    usia,
-    penyakit,
-    nama_ruangan,
-    harga_ruangan,
-    fasilitas_ruangan,
-  } = req.body;
+const addCategory = async (req, res) => {
+  try {
+    const {
+      id_kelas_ruangan,
+      jenis_kelamin,
+      usia,
+      penyakit,
+      nama_ruangan,
+      harga_ruangan,
+      fasilitas_ruangan,
+    } = req.body;
 
-  // Validasi required fields
-  if (!nama_ruangan || !id_kelas_ruangan) {
-    return res.status(400).json({
-      success: false,
-      message: "nama_ruangan dan id_kelas_ruangan wajib diisi",
+    if (!nama_ruangan || !id_kelas_ruangan || !harga_ruangan || !jenis_kelamin || !usia || !penyakit) {
+      const missing = [];
+      if (!nama_ruangan) missing.push("nama_ruangan");
+      if (!id_kelas_ruangan) missing.push("id_kelas_ruangan");
+      if (!harga_ruangan) missing.push("harga_ruangan");
+      if (!jenis_kelamin) missing.push("jenis_kelamin");
+      if (!usia) missing.push("usia");
+      if (!penyakit) missing.push("penyakit");
+      return res.status(400).json({
+        success: false,
+        message: `Field wajib diisi: ${missing.join(", ")}`,
+      });
+    }
+
+    const newCategory = await categoryService.create({
+      ...req.body,
+      id_klinik: req.user?.id_klinik,
     });
+
+    res.status(201).json({
+      success: true,
+      message: "Kategori ruangan berhasil ditambahkan",
+      data: newCategory,
+    });
+  } catch (err) {
+    console.error("addCategory error:", err);
+    res.status(500).json({ success: false, message: "Terjadi kesalahan server" });
   }
-
-  const newCategory = {
-    id: kategoriRuangan.length + 1,
-    id_klinik: req.user?.id_klinik || 1, // From JWT token
-    id_kelas_ruangan,
-    jenis_kelamin,
-    usia,
-    penyakit,
-    nama_ruangan,
-    harga_ruangan,
-    fasilitas_ruangan,
-    is_active: true,
-    created_at: new Date(),
-    updated_at: new Date(),
-  };
-
-  kategoriRuangan.push(newCategory);
-
-  res.status(201).json({
-    success: true,
-    message: "Kategori ruangan berhasil ditambahkan",
-    data: newCategory,
-  });
 };
 
-const updateCategory = (req, res) => {
-  const { id } = req.params;
-  const {
-    id_kelas_ruangan,
-    jenis_kelamin,
-    usia,
-    penyakit,
-    nama_ruangan,
-    harga_ruangan,
-    fasilitas_ruangan,
-    is_active,
-  } = req.body;
+const updateCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updated = await categoryService.update(id, req.body);
 
-  const category = kategoriRuangan.find((c) => c.id == id);
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Kategori ruangan tidak ditemukan",
+      });
+    }
 
-  if (!category) {
-    return res.status(404).json({
-      success: false,
-      message: "Kategori ruangan tidak ditemukan",
+    res.json({
+      success: true,
+      message: "Kategori ruangan berhasil diupdate",
+      data: updated,
     });
+  } catch (err) {
+    console.error("updateCategory error:", err);
+    res.status(500).json({ success: false, message: "Terjadi kesalahan server" });
   }
-
-  if (id_kelas_ruangan) category.id_kelas_ruangan = id_kelas_ruangan;
-  if (jenis_kelamin) category.jenis_kelamin = jenis_kelamin;
-  if (usia) category.usia = usia;
-  if (penyakit) category.penyakit = penyakit;
-  if (nama_ruangan) category.nama_ruangan = nama_ruangan;
-  if (harga_ruangan) category.harga_ruangan = harga_ruangan;
-  if (fasilitas_ruangan) category.fasilitas_ruangan = fasilitas_ruangan;
-  if (is_active !== undefined) category.is_active = is_active;
-  category.updated_at = new Date();
-
-  res.json({
-    success: true,
-    message: "Kategori ruangan berhasil diupdate",
-    data: category,
-  });
 };
 
-const deleteCategory = (req, res) => {
-  const { id } = req.params;
+const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await categoryService.remove(id);
 
-  const categoryIndex = kategoriRuangan.findIndex((c) => c.id == id);
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Kategori ruangan tidak ditemukan",
+      });
+    }
 
-  if (categoryIndex === -1) {
-    return res.status(404).json({
-      success: false,
-      message: "Kategori ruangan tidak ditemukan",
+    res.json({
+      success: true,
+      message: "Kategori ruangan berhasil dihapus",
+      data: deleted,
     });
+  } catch (err) {
+    console.error("deleteCategory error:", err);
+    res.status(500).json({ success: false, message: "Terjadi kesalahan server" });
   }
-
-  const deletedCategory = kategoriRuangan.splice(categoryIndex, 1);
-
-  res.json({
-    success: true,
-    message: "Kategori ruangan berhasil dihapus",
-    data: deletedCategory[0],
-  });
 };
 
 module.exports = {

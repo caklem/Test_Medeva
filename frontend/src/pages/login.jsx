@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ChevronRight } from "lucide-react";
+import * as yup from "yup";
 import api from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+
+const loginSchema = yup.object().shape({
+  klinikId: yup.string().required("Klinik ID wajib diisi"),
+  username: yup.string().required("User ID wajib diisi"),
+  password: yup.string().required("Password wajib diisi"),
+});
 
 function LoginPage() {
     const navigate = useNavigate();
@@ -17,26 +24,51 @@ function LoginPage() {
             password: "",
         });
     const [isRobotChecked, setIsRobotChecked] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false);
     const handleChange = (e) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value,
         });
+        if (errors[e.target.name]) {
+            setErrors((prev) => {
+                const copy = { ...prev };
+                delete copy[e.target.name];
+                return copy;
+            });
+        }
     };
     const handleLogin = async (e) => {
         e.preventDefault();
+        setErrors({});
 
         try {
+            await loginSchema.validate(formData, { abortEarly: false });
+        } catch (err) {
+            const fieldErrors = {};
+            err.inner.forEach((validationErr) => {
+                fieldErrors[validationErr.path] = validationErr.message;
+            });
+            setErrors(fieldErrors);
+            return;
+        }
 
+        if (!isRobotChecked) {
+            setErrors((prev) => ({ ...prev, robot: "Harap centang 'Saya bukan robot'" }));
+            return;
+        }
+
+        setLoading(true);
+
+        try {
             const response = await api.post("/auth/login", {
+                    klinikId: formData.klinikId,
                     username: formData.username,
                     password: formData.password,
                 }
             );
 
-            console.log(response.data);
-
-            // simpan token & user
             localStorage.setItem(
                 "token",
                 response.data.token
@@ -46,19 +78,14 @@ function LoginPage() {
                 JSON.stringify(response.data.user)
             );
 
-            alert("Login berhasil");
-
-            // redirect using React Router
             navigate("/dashboard");
-
         } catch (error) {
-
-            console.log(error);
-
             alert(
                 error.response?.data?.message ||
                 "Login gagal"
             );
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -92,6 +119,7 @@ function LoginPage() {
                             value={formData.klinikId}
                             onChange={handleChange}
                         />
+                        {errors.klinikId && <p style={{ fontSize: "11px", color: "#ef4444", marginTop: "4px" }}>{errors.klinikId}</p>}
                     </div>
 
                     {/* User ID */}
@@ -108,6 +136,7 @@ function LoginPage() {
                             value={formData.username}
                             onChange={handleChange}
                         />
+                        {errors.username && <p style={{ fontSize: "11px", color: "#ef4444", marginTop: "4px" }}>{errors.username}</p>}
                     </div>
 
                     {/* Password */}
@@ -137,6 +166,7 @@ function LoginPage() {
                                 )}
                             </button>
                         </div>
+                        {errors.password && <p style={{ fontSize: "11px", color: "#ef4444", marginTop: "4px" }}>{errors.password}</p>}
                     </div>
 
                     {/* Recaptcha */}
@@ -146,7 +176,16 @@ function LoginPage() {
                                 <Checkbox
                                     id="robot"
                                     checked={isRobotChecked}
-                                    onCheckedChange={(checked) => setIsRobotChecked(!!checked)}
+                                    onCheckedChange={(checked) => {
+                                        setIsRobotChecked(!!checked);
+                                        if (errors.robot) {
+                                            setErrors((prev) => {
+                                                const copy = { ...prev };
+                                                delete copy.robot;
+                                                return copy;
+                                            });
+                                        }
+                                    }}
                                     className="h-5 w-5"
                                 />
                                 <Label htmlFor="robot" className="text-sm text-gray-700 cursor-pointer font-normal">
@@ -158,6 +197,7 @@ function LoginPage() {
                                 <span className="text-[10px] text-gray-400 italic">reCAPTCHA</span>
                             </div>
                         </div>
+                        {errors.robot && <p style={{ fontSize: "11px", color: "#ef4444", marginTop: "4px" }}>{errors.robot}</p>}
                     </div>
 
                     {/* Forgot Password */}
@@ -173,9 +213,10 @@ function LoginPage() {
                     {/* Button */}
                     <Button
                         type="submit"
+                        disabled={loading}
                         className="w-full h-12 rounded-full bg-blue-500 hover:bg-blue-600 text-white font-semibold text-base transition"
                     >
-                        Masuk
+                        {loading ? "Memproses..." : "Masuk"}
                     </Button>
 
                     {/* Link */}

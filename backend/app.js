@@ -19,6 +19,9 @@ app.use("/api/auth", authRoutes);
 const categoryRoutes = require("./routes/categoryRoutes");
 app.use("/api/kategori-ruangan", categoryRoutes);
 
+const kelasRoutes = require("./routes/kelasRoutes");
+app.use("/api/kelas-ruangan", kelasRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);

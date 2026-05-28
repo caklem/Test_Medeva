@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
-function Sidebar() {
+function Sidebar({ sidebarOpen, onCloseSidebar }) {
   const [showSubmenu, setShowSubmenu] = useState(false);
   const submenuRef = useRef(null);
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -14,57 +16,36 @@ function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  return (
+  const sidebarContent = (
     <>
-      {/* MOBILE OVERLAY */}
-      {showSubmenu && (
-        <div
-          className="fixed inset-0 z-40 lg:hidden"
-          onClick={() => setShowSubmenu(false)}
-        />
-      )}
-
-      {/* SIDEBAR */}
-      <aside
-        className="
-          fixed left-0 z-50
-          top-[56px]
-          h-screen w-[70px]
-          bg-white border-r
-          flex flex-col items-center pt-4
-          hidden lg:flex
-        "
-        style={{ borderColor: "#e0e0e0" }}
+      {/* MENU ITEM */}
+      <div
+        onClick={() => setShowSubmenu(!showSubmenu)}
+        className="flex flex-col items-center px-2 py-3 rounded-lg cursor-pointer"
       >
-        {/* MENU ITEM */}
-        <div
-          onClick={() => setShowSubmenu(!showSubmenu)}
-          className="flex flex-col items-center px-2 py-3 rounded-lg cursor-pointer"
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="1" />
+          <line x1="8" y1="6" x2="10" y2="6" />
+          <line x1="14" y1="6" x2="16" y2="6" />
+          <line x1="8" y1="10" x2="10" y2="10" />
+          <line x1="14" y1="10" x2="16" y2="10" />
+          <line x1="8" y1="14" x2="10" y2="14" />
+          <line x1="14" y1="14" x2="16" y2="14" />
+          <rect x="9" y="18" width="6" height="4" />
+        </svg>
+        <span
+          className="text-center mt-1"
+          style={{ fontSize: "10px", color: "#3b82f6" }}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="4" y="2" width="16" height="20" rx="1" />
-            <line x1="8" y1="6" x2="10" y2="6" />
-            <line x1="14" y1="6" x2="16" y2="6" />
-            <line x1="8" y1="10" x2="10" y2="10" />
-            <line x1="14" y1="10" x2="16" y2="10" />
-            <line x1="8" y1="14" x2="10" y2="14" />
-            <line x1="14" y1="14" x2="16" y2="14" />
-            <rect x="9" y="18" width="6" height="4" />
-          </svg>
-          <span
-            className="text-center mt-1"
-            style={{ fontSize: "10px", color: "#3b82f6" }}
-          >
-            Rawat Inap
-          </span>
-        </div>
-      </aside>
+          Rawat Inap
+        </span>
+      </div>
 
       {/* SUBMENU */}
-      {showSubmenu && (
+      {showSubmenu && isAdmin && (
         <div
           ref={submenuRef}
-          className="fixed z-50 hidden lg:block"
+          className="fixed z-50"
           style={{
             top: "132px",
             left: "78px",
@@ -109,6 +90,30 @@ function Sidebar() {
             </span>
           </button>
         </div>
+      )}
+    </>
+  );
+
+  return (
+    <>
+      {/* MOBILE OVERLAY */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 lg:hidden"
+          onClick={() => { onCloseSidebar(); setShowSubmenu(false); }}
+        />
+      )}
+
+      {/* SIDEBAR — DESKTOP */}
+      <aside className="fixed left-0 z-50 top-[56px] h-screen w-[70px] bg-white border-r flex flex-col items-center pt-4 hidden lg:flex" style={{ borderColor: "#e0e0e0" }}>
+        {sidebarContent}
+      </aside>
+
+      {/* SIDEBAR — MOBILE DRAWER */}
+      {sidebarOpen && (
+        <aside className="fixed left-0 z-50 top-[56px] h-screen w-[220px] bg-white border-r flex flex-col items-center pt-4 lg:hidden" style={{ borderColor: "#e0e0e0", boxShadow: "4px 0 12px rgba(0,0,0,0.1)" }}>
+          {sidebarContent}
+        </aside>
       )}
     </>
   );

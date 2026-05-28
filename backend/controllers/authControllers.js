@@ -1,53 +1,65 @@
 const jwt = require('jsonwebtoken');
-const users = require("../data/users");
+const authService = require("../services/authService");
 
-const login = (req, res) => {
-    const { username, password } = req.body;
+const login = async (req, res) => {
+    const { username, password, klinikId } = req.body;
 
-    if (!username || !password) {
+    if (!username || !password || !klinikId) {
         return res.status(400).json({
             success: false,
-            message: "Username dan password wajib diisi"
+            message: "Klinik ID, username, dan password wajib diisi"
         });
     }
 
-    const user = users.find(
-        (u) =>
-            u.username === username &&
-            u.password === password
-    );
-
-    if (!user) {
-        return res.status(401).json({
-            success: false,
-            message: "Username atau password salah"
-        });
-    }
-
-    const token = jwt.sign(
-        {
-            id: user.id,
-            id_klinik: user.id_klinik,
-            is_admin: user.is_admin,
-            username: user.username,
-        },
-        process.env.JWT_SECRET,
-        {
-            expiresIn: "1d",
+    try {
+        const klinik = await authService.findKlinikByKodeAuth(klinikId);
+        if (!klinik) {
+            return res.status(401).json({
+                success: false,
+                message: "Klinik tidak ditemukan"
+            });
         }
-    );
 
-    res.json({
-        success: true,
-        message: "Login berhasil",
-        token,
-        user: {
-            id: user.id,
-            username: user.username,
-            nama_lengkap: user.nama_lengkap,
-            is_admin: user.is_admin,
-        },
-    });
+        const user = await authService.findByCredentials(username, password, klinik.id);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Username atau password salah"
+            });
+        }
+
+        const token = jwt.sign(
+            {
+                id: user.id,
+                id_klinik: user.id_klinik,
+                is_admin: user.is_admin,
+                username: user.username,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "1d",
+            }
+        );
+
+        res.json({
+            success: true,
+            message: "Login berhasil",
+            token,
+            user: {
+                id: user.id,
+                username: user.username,
+                nama_lengkap: user.nama_lengkap,
+                is_admin: user.is_admin,
+            },
+        });
+    } catch (err) {
+        console.error("Login error:", err);
+        res.status(500).json({
+            success: false,
+            message: "Terjadi kesalahan server",
+        });
+    }
 };
 
 module.exports = {
