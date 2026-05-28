@@ -98,14 +98,16 @@ function Categories() {
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => {
-        const copy = { ...prev };
-        delete copy[name];
-        return copy;
-      });
-    }
   };
+
+  const handleHargaChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    setFormData((prev) => ({ ...prev, harga_ruangan: raw }));
+  };
+
+  const displayHarga = formData.harga_ruangan
+    ? Number(formData.harga_ruangan).toLocaleString("id-ID")
+    : "";
 
   const handleFacilityChange = (facility) => {
     setFacilities((prev) => ({ ...prev, [facility]: !prev[facility] }));
@@ -360,24 +362,46 @@ function Categories() {
         {/* RIGHT PANEL */}
         <div className="flex-1 flex flex-col" style={{ margin: "8px 8px 8px 8px" }}>
           {showForm ? (
-            <div className="flex-1 bg-white rounded-lg p-6 overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-800">
-                    {editingRoom ? "EDIT KATEGORI RUANGAN" : "FORM TAMBAH KATEGORI RUANGAN"}
-                  </h2>
-                  <p className="text-xs text-red-500 mt-1">*) Wajib diisi</p>
-                </div>
-                <AktifkanButton onClick={() => setShowConfirmModal(true)} />
+            <div className="bg-white rounded-lg p-6 overflow-y-auto">
+              <div className="flex items-start justify-between" style={{ marginBottom: "4px" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#1a1a1a", margin: 0, letterSpacing: "normal" }}>
+                  FORM TAMBAH KATEGORI RUANGAN
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(true)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "8px",
+                    border: "1px solid #d1d5db", borderRadius: "8px",
+                    padding: "8px 16px", backgroundColor: "#fff",
+                    cursor: "pointer", position: "relative",
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="21 8 21 21 3 21 3 8" />
+                    <rect x="1" y="3" width="22" height="5" />
+                    <line x1="10" y1="12" x2="14" y2="12" />
+                  </svg>
+                  <span style={{ fontSize: "14px", fontWeight: 500, color: "#333333" }}>Aktifkan</span>
+                  <div style={{ position: "absolute", right: 0, top: 0, width: "3px", height: "100%", backgroundColor: "#ef4444", borderRadius: "0 8px 8px 0" }} />
+                </button>
               </div>
 
-              <form onSubmit={handleSubmitForm} className="space-y-4">
-                <div>
-                  <h3 className="text-xs font-semibold text-gray-600 mb-3 uppercase">Informasi Ruangan</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* TEKS WAJIB DIISI */}
+              <p style={{ margin: "4px 0 24px 0", fontSize: "12px", fontWeight: 400, color: "#ef4444" }}>
+                <span style={{ color: "#ef4444" }}>*</span><span style={{ color: "#ef4444" }}>) Wajib diisi</span>
+              </p>
+
+              <form onSubmit={handleSubmitForm}>
+                {/* BOX 1: INPUT FIELDS */}
+                <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", padding: "24px", backgroundColor: "#fff", marginBottom: "16px" }}>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#333", marginBottom: "20px", letterSpacing: "0.5px" }}>INFORMASI RUANGAN</div>
+
+                  {/* BARIS 1: Nama + Kelas */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Nama / Nomor Ruangan <span className="text-red-500">*</span>
+                      <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#333", marginBottom: "8px" }}>
+                        Nama / Nomor Ruangan <span style={{ color: "#ef4444" }}>*</span>
                       </label>
                       <input
                         type="text"
@@ -385,32 +409,34 @@ function Categories() {
                         value={formData.nama_ruangan}
                         onChange={handleFormChange}
                         placeholder="Nama / Nomor Ruangan"
-                        className={`w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 ${errors.nama_ruangan ? "border-red-400" : "border-gray-300"}`}
+                        style={{ width: "100%", height: "40px", border: "1px solid #d1d5db", borderRadius: "6px", padding: "8px 12px", fontSize: "13px", outline: "none", backgroundColor: "#fff", boxSizing: "border-box" }}
                       />
-                      {errors.nama_ruangan && <p className="text-xs text-red-500 mt-1">{errors.nama_ruangan}</p>}
+                      {errors.nama_ruangan && <p style={{ fontSize: "11px", color: "#ef4444", margin: "4px 0 0 0" }}>{errors.nama_ruangan}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Kelas <span className="text-red-500">*</span>
+                      <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#333", marginBottom: "8px" }}>
+                        Kelas <span style={{ color: "#ef4444" }}>*</span>
                       </label>
                       <select
                         name="id_kelas_ruangan"
                         value={formData.id_kelas_ruangan}
                         onChange={handleFormChange}
-                        className={`w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 ${errors.id_kelas_ruangan ? "border-red-400" : "border-gray-300"}`}
+                        style={{ width: "100%", height: "40px", border: "1px solid #d1d5db", borderRadius: "6px", padding: "8px 12px", fontSize: "13px", outline: "none", backgroundColor: "#fff", color: formData.id_kelas_ruangan ? "#333" : "#9ca3af", appearance: "auto" }}
                       >
-                        <option value="">Pilih Kelas</option>
+                        <option value="" disabled style={{ color: "#9ca3af" }}>Select...</option>
                         {kelasOptions.map((k) => (
-                          <option key={k.value} value={k.value}>{k.label}</option>
+                          <option key={k.value} value={k.value} style={{ color: "#333" }}>{k.label}</option>
                         ))}
                       </select>
-                      {errors.id_kelas_ruangan && <p className="text-xs text-red-500 mt-1">{errors.id_kelas_ruangan}</p>}
+                      {errors.id_kelas_ruangan && <p style={{ fontSize: "11px", color: "#ef4444", margin: "4px 0 0 0" }}>{errors.id_kelas_ruangan}</p>}
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+
+                  {/* BARIS 2: Jumlah Kamar + Harga */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginTop: "16px" }}>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Jumlah Kamar <span className="text-red-500">*</span>
+                      <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#333", marginBottom: "8px" }}>
+                        Jumlah Kamar <span style={{ color: "#ef4444" }}>*</span>
                       </label>
                       <input
                         type="number"
@@ -418,35 +444,35 @@ function Categories() {
                         value={formData.jumlah_kamar}
                         onChange={handleFormChange}
                         placeholder="0"
-                        className={`w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-teal-500 ${errors.jumlah_kamar ? "border-red-400" : "border-gray-300"}`}
+                        style={{ width: "100%", height: "40px", border: "1px solid #d1d5db", borderRadius: "6px", padding: "8px 12px", fontSize: "13px", outline: "none", backgroundColor: "#fff", boxSizing: "border-box" }}
                         min="0"
                       />
-                      {errors.jumlah_kamar && <p className="text-xs text-red-500 mt-1">{errors.jumlah_kamar}</p>}
+                      {errors.jumlah_kamar && <p style={{ fontSize: "11px", color: "#ef4444", margin: "4px 0 0 0" }}>{errors.jumlah_kamar}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Harga Ruangan <span className="text-red-500">*</span>
+                      <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#333", marginBottom: "8px" }}>
+                        Harga Ruangan <span style={{ color: "#ef4444" }}>*</span>
                       </label>
-                      <div className="flex">
-                        <span className="bg-gray-100 px-2 py-2 border border-gray-300 border-r-0 rounded-l text-xs">Rp</span>
+                      <div style={{ display: "flex" }}>
+                        <span style={{ backgroundColor: "#f3f4f6", padding: "8px 12px", border: "1px solid #d1d5db", borderRight: "none", borderRadius: "6px 0 0 6px", fontSize: "13px", color: "#6b7280", lineHeight: "24px" }}>Rp</span>
                         <input
-                          type="number"
+                          type="text"
                           name="harga_ruangan"
-                          value={formData.harga_ruangan}
-                          onChange={handleFormChange}
+                          value={displayHarga}
+                          onChange={handleHargaChange}
                           placeholder="0"
-                          className={`flex-1 px-3 py-2 border rounded-r text-sm outline-none focus:ring-2 focus:ring-teal-500 ${errors.harga_ruangan ? "border-red-400" : "border-gray-300"}`}
-                          min="0"
+                          style={{ flex: 1, height: "40px", border: "1px solid #d1d5db", borderLeft: "none", borderRadius: "0 6px 6px 0", padding: "8px 12px", fontSize: "13px", outline: "none", backgroundColor: "#fff", boxSizing: "border-box" }}
                         />
                       </div>
-                      {errors.harga_ruangan && <p className="text-xs text-red-500 mt-1">{errors.harga_ruangan}</p>}
+                      {errors.harga_ruangan && <p style={{ fontSize: "11px", color: "#ef4444", margin: "4px 0 0 0" }}>{errors.harga_ruangan}</p>}
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-xs font-semibold text-gray-600 mb-3 uppercase">Fasilitas Ruangan</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {/* BOX 2: CHECKBOX FASILITAS */}
+                <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", padding: "24px", backgroundColor: "#fff", marginBottom: "16px" }}>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#333", marginBottom: "20px", letterSpacing: "0.5px" }}>INFORMASI RUANGAN</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px 24px" }}>
                     {[
                       { key: "ac", label: "ac" },
                       { key: "kipas_angin", label: "kipas angin" },
@@ -464,65 +490,97 @@ function Categories() {
                       { key: "kabinet", label: "kabinet" },
                       { key: "bed_bayi", label: "bed bayi" },
                     ].map((facility) => (
-                      <label key={facility.key} className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={facilities[facility.key]} onChange={() => handleFacilityChange(facility.key)} className="w-4 h-4 rounded border-gray-300" />
-                        <span className="text-xs text-gray-600">{facility.label}</span>
+                      <label key={facility.key} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={facilities[facility.key]}
+                          onChange={() => handleFacilityChange(facility.key)}
+                          style={{ width: "16px", height: "16px", border: "1.5px solid #d1d5db", borderRadius: "3px", margin: 0, accentColor: "#3b82f6" }}
+                        />
+                        <span style={{ fontSize: "13px", fontWeight: 400, color: "#555" }}>{facility.label}</span>
                       </label>
                     ))}
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-2 block uppercase">Jenis Kelamin <span className="text-red-500">*</span></label>
-                  <div className="flex gap-3">
-                    {[{ value: "Semua", label: "Semua" }, { value: "Laki-laki", label: "Laki-laki" }, { value: "Perempuan", label: "Perempuan" }].map((option) => (
-                      <label key={option.value} className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="jenis_kelamin" value={option.value} checked={formData.jenis_kelamin === option.value} onChange={handleFormChange} className="w-4 h-4" />
-                        <span className="text-xs text-gray-600">{option.label}</span>
-                      </label>
-                    ))}
+                {/* BOX 3: RADIO BUTTONS */}
+                <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", padding: "24px", backgroundColor: "#fff", marginBottom: "24px" }}>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#333", marginBottom: "20px", letterSpacing: "0.5px" }}>INFORMASI RUANGAN</div>
+
+                  {/* JENIS KELAMIN */}
+                  <div style={{ marginBottom: "20px" }}>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#333", marginBottom: "10px" }}>
+                      Jenis Kelamin <span style={{ color: "#ef4444" }}>*</span>
+                    </div>
+                    <div style={{ display: "flex", gap: "24px" }}>
+                      {["Semua", "Laki-laki", "Perempuan"].map((opt) => (
+                        <label key={opt} style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "13px", fontWeight: 400, color: "#555" }}>
+                          <input type="radio" name="jenis_kelamin" value={opt} checked={formData.jenis_kelamin === opt} onChange={handleFormChange} style={{ width: "16px", height: "16px", border: "1.5px solid #d1d5db", margin: 0, accentColor: "#3b82f6" }} />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
+                    {errors.jenis_kelamin && <p style={{ fontSize: "11px", color: "#ef4444", margin: "4px 0 0 0" }}>{errors.jenis_kelamin}</p>}
                   </div>
-                  {errors.jenis_kelamin && <p className="text-xs text-red-500 mt-1">{errors.jenis_kelamin}</p>}
+
+                  {/* USIA */}
+                  <div style={{ marginBottom: "20px" }}>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#333", marginBottom: "10px" }}>
+                      Usia <span style={{ color: "#ef4444" }}>*</span>
+                    </div>
+                    <div style={{ display: "flex", gap: "24px" }}>
+                      {["Semua", "Anak", "Dewasa"].map((opt) => (
+                        <label key={opt} style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "13px", fontWeight: 400, color: "#555" }}>
+                          <input type="radio" name="usia" value={opt} checked={formData.usia === opt} onChange={handleFormChange} style={{ width: "16px", height: "16px", border: "1.5px solid #d1d5db", margin: 0, accentColor: "#3b82f6" }} />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
+                    {errors.usia && <p style={{ fontSize: "11px", color: "#ef4444", margin: "4px 0 0 0" }}>{errors.usia}</p>}
+                  </div>
+
+                  {/* PENYAKIT */}
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#333", marginBottom: "10px" }}>
+                      Penyakit <span style={{ color: "#ef4444" }}>*</span>
+                    </div>
+                    <div style={{ display: "flex", gap: "24px" }}>
+                      {["Semua", "Infeksius", "Non-Infeksius"].map((opt) => (
+                        <label key={opt} style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "13px", fontWeight: 400, color: "#555" }}>
+                          <input type="radio" name="penyakit" value={opt} checked={formData.penyakit === opt} onChange={handleFormChange} style={{ width: "16px", height: "16px", border: "1.5px solid #d1d5db", margin: 0, accentColor: "#3b82f6" }} />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
+                    {errors.penyakit && <p style={{ fontSize: "11px", color: "#ef4444", margin: "4px 0 0 0" }}>{errors.penyakit}</p>}
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-2 block uppercase">Usia <span className="text-red-500">*</span></label>
-                  <div className="flex gap-3">
-                    {[{ value: "Semua", label: "Semua" }, { value: "Anak", label: "Anak" }, { value: "Dewasa", label: "Dewasa" }].map((option) => (
-                      <label key={option.value} className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="usia" value={option.value} checked={formData.usia === option.value} onChange={handleFormChange} className="w-4 h-4" />
-                        <span className="text-xs text-gray-600">{option.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {errors.usia && <p className="text-xs text-red-500 mt-1">{errors.usia}</p>}
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-2 block uppercase">Penyakit <span className="text-red-500">*</span></label>
-                  <div className="flex gap-3">
-                    {[{ value: "Semua", label: "Semua" }, { value: "Infeksius", label: "Infeksius" }, { value: "Non-Infeksius", label: "Non-Infeksius" }].map((option) => (
-                      <label key={option.value} className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="penyakit" value={option.value} checked={formData.penyakit === option.value} onChange={handleFormChange} className="w-4 h-4" />
-                        <span className="text-xs text-gray-600">{option.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {errors.penyakit && <p className="text-xs text-red-500 mt-1">{errors.penyakit}</p>}
-                </div>
-
-                <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
-                  <button type="button" onClick={resetForm} className="px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 font-medium text-sm cursor-pointer">
+                {/* TOMBOL AKSI */}
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    style={{ padding: "8px 24px", border: "1px solid #ef4444", borderRadius: "6px", backgroundColor: "#fff", color: "#ef4444", fontSize: "13px", fontWeight: 500, cursor: "pointer" }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = "#fef2f2"}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = "#fff"}
+                  >
                     Batal
                   </button>
-                  <button type="submit" disabled={submitting} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium text-sm cursor-pointer disabled:opacity-50">
-                    {submitting ? "Menyimpan..." : editingRoom ? "Simpan Perubahan" : "Simpan"}
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    style={{ padding: "8px 24px", border: "none", borderRadius: "6px", backgroundColor: "#3b82f6", color: "#fff", fontSize: "13px", fontWeight: 600, cursor: "pointer", opacity: submitting ? 0.6 : 1 }}
+                    onMouseEnter={(e) => { if (!submitting) e.target.style.backgroundColor = "#2563eb"; }}
+                    onMouseLeave={(e) => { if (!submitting) e.target.style.backgroundColor = "#3b82f6"; }}
+                  >
+                    {submitting ? "Menyimpan..." : "Simpan"}
                   </button>
                 </div>
               </form>
             </div>
           ) : selectedRoom ? (
-            <div className="flex-1 bg-white rounded-lg p-6 overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 overflow-y-auto">
               {/* HEADER */}
               <div className="flex items-center justify-between pb-4" style={{ borderBottom: "1px solid #e5e7eb" }}>
                 <div className="flex items-center gap-3">
@@ -625,7 +683,7 @@ function Categories() {
                   <path d="M62 50 C62 48 64 47 65 48 L67 50 L67 45 C67 43.5 69 43 69.5 44.5 L70 47 L70 43 C70 41.5 72 41 72.5 42.5 L73 46 L73 44 C73 42.5 75 42 75.5 43.5 L76 48 L76 58 C76 62 73 65 69 65 L65 65 C62 65 60 62 60 59 L60 53 C60 51 61.5 50 62 50 Z" fill="#d5d5d5" stroke="#bbb" strokeWidth="1" />
                 </svg>
                 <p style={{ marginTop: "20px", fontSize: "13px", color: "#888888", textAlign: "center", maxWidth: "500px", lineHeight: 1.6 }}>
-                  Silahkan memilih kategori ruangan untuk melihat, mengubah, menghapus, mengarsipkan, dan mengaktifkan data kategori ruangan. Silahkan klik tombol <span style={{ textDecoration: "underline" }}>tambah</span> untuk menambahkan kategori ruangan baru.
+                  Silahkan memilih harga obat untuk melihat, mengubah, menghapus, mengarsipkan, dan mengaktifkan data harga obat. Silahkan klik tombol <span style={{ textDecoration: "underline" }}>tambah</span> untuk menambahkan harga obat baru.
                 </p>
               </div>
               <div style={{ flex: "0 0 calc(45% - 8px)", marginTop: "8px", backgroundColor: "#f0f0f0", borderRadius: "8px" }} />
